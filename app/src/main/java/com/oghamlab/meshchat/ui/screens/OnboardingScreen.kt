@@ -1,18 +1,27 @@
 package com.oghamlab.meshchat.ui.screens
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.oghamlab.meshchat.nostr.identity.IdentityRepository
 
 @Composable
 fun OnboardingScreen(
+    repository: IdentityRepository,
     onContinue: () -> Unit
 ) {
+    var nsec by remember { mutableStateOf("") }
+    var error by remember { mutableStateOf<String?>(null) }
+    var busy by remember { mutableStateOf(false) }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -21,36 +30,101 @@ fun OnboardingScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "MeshChat",
-            style = MaterialTheme.typography.headlineLarge
+            "Welcome to MeshChat",
+            style = MaterialTheme.typography.headlineMedium
         )
 
         Spacer(Modifier.height(12.dp))
 
-        Text(
-            text = "Private messaging. Decentralized identity.",
-            textAlign = TextAlign.Center,
-            style = MaterialTheme.typography.bodyLarge
-        )
+        Text("Create or import your Nostr identity.")
 
-        Spacer(Modifier.height(32.dp))
+        Spacer(Modifier.height(24.dp))
 
         Button(
-            onClick = onContinue,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            enabled = !busy,
+            onClick = {
+                busy = true
+                try {
+                    repository.createIdentity()
+                    onContinue()
+                } catch (e: Exception) {
+                    error = "Unable to create identity."
+                } finally {
+                    busy = false
+                }
+            }
         ) {
-            Text("Explore Prototype")
+            Text("Create New Identity")
         }
+
+        Spacer(Modifier.height(24.dp))
+
+        OutlinedTextField(
+            value = nsec,
+            onValueChange = {
+                nsec = it
+                error = null
+            },
+            label = { Text("Existing nsec") },
+            visualTransformation = PasswordVisualTransformation(),
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Password
+            ),
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth()
+        )
 
         Spacer(Modifier.height(12.dp))
 
+        OutlinedButton(
+            modifier = Modifier.fillMaxWidth(),
+            enabled = !busy && nsec.isNotBlank(),
+            onClick = {
+                busy = true
+                try {
+                    repository.importIdentity(nsec)
+                    nsec = ""
+                    onContinue()
+                } catch (e: IllegalArgumentException) {
+                    error = "Invalid Nostr private key."
+                } catch (e: Exception) {
+                    error = "Unable to import identity."
+                } finally {
+                    busy = false
+                }
+            }
+        ) {
+            Text("Import Identity")
+        }
+
+        error?.let {
+            Spacer(Modifier.height(12.dp))
+            Text(
+                it,
+                color = MaterialTheme.colorScheme.error
+            )
+        }
+
+        Spacer(Modifier.height(20.dp))
+
         Text(
-            text = "Nostr identity setup arrives in Increment 2.",
-            style = MaterialTheme.typography.bodySmall,
-            textAlign = TextAlign.Center
+            "Keep your private key secret. Losing it without " +
+                    "a backup can permanently lock you out of your identity.",
+            style = MaterialTheme.typography.bodySmall
         )
     }
 }
+
+
+
+
+
+
+
+
+
+
 
 
 @Preview(showBackground = true)
@@ -58,6 +132,7 @@ fun OnboardingScreen(
 fun OnboardingScreenPreview() {
     MaterialTheme {
         OnboardingScreen(
+            repository = IdentityRepository(LocalContext.current),
             onContinue = {}
         )
     }

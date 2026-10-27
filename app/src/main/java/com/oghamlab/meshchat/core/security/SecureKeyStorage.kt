@@ -143,9 +143,13 @@ class SecureKeyStorage(context: Context) {
      * AndroidKeyStore does not require a file
      * to be supplied to load().
      */
-    private val keyStore =
-        KeyStore.getInstance("AndroidKeyStore").apply {
-            load(null)
+    private val keyStore: KeyStore? =
+        try {
+            KeyStore.getInstance("AndroidKeyStore").apply {
+                load(null)
+            }
+        } catch (_: Exception) {
+            null
         }
 
 
@@ -171,6 +175,8 @@ class SecureKeyStorage(context: Context) {
      */
     private fun getOrCreateKey(): SecretKey {
 
+        val ks = keyStore ?: throw IllegalStateException("AndroidKeyStore not available")
+
         /**
          * Attempt to retrieve an existing key
          * from Android Keystore.
@@ -184,7 +190,7 @@ class SecureKeyStorage(context: Context) {
          * AndroidKeyStore manages access to
          * its key entries through the platform.
          */
-        val existing = keyStore.getKey(alias, null)
+        val existing = ks.getKey(alias, null)
 
         /**
          * Kotlin's "is" operator checks

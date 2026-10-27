@@ -3,7 +3,8 @@ package com.oghamlab.meshchat.nostr.identity
 
 import android.content.Context
 import com.oghamlab.meshchat.core.security.SecureKeyStorage
-
+import com.oghamlab.meshchat.core.backup.EncryptedBackupManager
+import com.oghamlab.meshchat.core.security.RecoveryBackupCrypto
 
 
 /**
@@ -675,4 +676,51 @@ class IdentityRepository(context: Context) {
             secret.fill(0)
         }
     }
+
+
+
+
+    private val backupManager = EncryptedBackupManager()
+
+    fun createEncryptedBackup(
+        password: CharArray
+    ): ByteArray {
+        val secret = storage.load()
+            ?: error("No identity exists")
+
+        return try {
+            backupManager.encrypt(secret, password)
+        } finally {
+            secret.fill(0)
+        }
+    }
+
+    fun restoreEncryptedBackup(
+        backup: ByteArray,
+        password: CharArray
+    ): NostrIdentity {
+        check(!hasIdentity()) {
+            "An identity already exists"
+        }
+
+        val secret = backupManager.decrypt(backup, password)
+
+        return try {
+            require(keyManager.isValidPrivateKey(secret)) {
+                "Backup contains an invalid private key"
+            }
+
+            val identity = keyManager.createIdentity(secret)
+
+            storage.save(secret)
+
+            identity
+        } finally {
+            secret.fill(0)
+        }
+    }
+
+
+
+
 }

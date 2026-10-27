@@ -25,7 +25,8 @@ import com.oghamlab.meshchat.nostr.identity.IdentityRepository
 
 @Composable
 fun SettingsScreen(
-    repository: IdentityRepository
+    repository: IdentityRepository,
+    onIdentityClick: () -> Unit
 ) {
     val context = LocalContext.current
 
@@ -102,6 +103,18 @@ fun SettingsScreen(
         Spacer(Modifier.height(8.dp))
 
         Text("Encrypted messaging: Coming later")
+
+        Spacer(Modifier.height(8.dp))
+
+        Button(
+            onClick = onIdentityClick,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("My Identity & Recovery")
+        }
+
+
+
     }
 }
 
@@ -117,7 +130,9 @@ fun SettingsScreen(
 private fun SettingsScreenPreview() {
     MaterialTheme {
         SettingsScreen(
-            repository = IdentityRepository(LocalContext.current)
+            repository = IdentityRepository(LocalContext.current),
+            onIdentityClick = {}
+
         )
     }
 }

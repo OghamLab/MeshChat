@@ -16,7 +16,8 @@ import com.oghamlab.meshchat.nostr.identity.IdentityRepository
 @Composable
 fun OnboardingScreen(
     repository: IdentityRepository,
-    onContinue: () -> Unit
+    onContinue: () -> Unit,
+    onRestoreBackup: () -> Unit
 ) {
     var nsec by remember { mutableStateOf("") }
     var error by remember { mutableStateOf<String?>(null) }
@@ -108,12 +109,31 @@ fun OnboardingScreen(
 
         Spacer(Modifier.height(20.dp))
 
+
+        OutlinedButton(
+            onClick = onRestoreBackup,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Restore Encrypted Backup")
+        }
+
+        Spacer(Modifier.height(20.dp))
+
+
+
+
+
         Text(
             "Keep your private key secret. Losing it without " +
                     "a backup can permanently lock you out of your identity.",
             style = MaterialTheme.typography.bodySmall
         )
     }
+
+
+
+
+
 }
 
 
@@ -133,7 +153,8 @@ fun OnboardingScreenPreview() {
     MaterialTheme {
         OnboardingScreen(
             repository = IdentityRepository(LocalContext.current),
-            onContinue = {}
+            onContinue = {},
+            onRestoreBackup = {}
         )
     }
 }

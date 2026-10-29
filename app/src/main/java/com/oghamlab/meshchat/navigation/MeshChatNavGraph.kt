@@ -15,10 +15,9 @@ import com.oghamlab.meshchat.ui.components.AppBottomBar
 import com.oghamlab.meshchat.ui.screens.*
 
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.oghamlab.meshchat.nostr.identity.IdentityRepository
-
-
-
+import com.oghamlab.meshchat.ui.viewmodel.RelayViewModel
 
 
 /**
@@ -111,6 +110,8 @@ fun MeshChatNavGraph() {
      */
     val context = LocalContext.current
 
+
+    val relayViewModel: RelayViewModel = viewModel()
 
     /**
      * Create and remember IdentityRepository.
@@ -645,11 +646,12 @@ fun MeshChatNavGraph() {
              * - View relay status.
              * - Configure relay preferences.
              */
+
             composable(Screen.Relays.route) {
-                RelaysScreen()
+                RelaysScreen(
+                    viewModel = relayViewModel
+                )
             }
-
-
             /**
              * SETTINGS DESTINATION
              *
@@ -692,6 +694,11 @@ fun MeshChatNavGraph() {
                     }
                 )
             }
+
+
+
+
+
 
             composable(Screen.RecoveryBackup.route) {
                 RecoveryBackupScreen(
